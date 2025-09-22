@@ -592,3 +592,5 @@ try-import %workspace%/user.bazelrc
 try-import %workspace%/local_tsan.bazelrc
 # Temporary: disable -Werror for cxxopts until we fix all the warnings.
 build:remove_werror cxxopts:test/mocks/upstream=-Werror
+# Disabilita il warning "missing-requires" come errore per tcmalloc per risolvere problemi di build con GCC più recenti.
+build --@com_github_google_tcmalloc//tcmalloc/internal:copts=-Wno-error=missing-requires
