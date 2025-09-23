@@ -2,7 +2,7 @@
 #pragma once
 
 #include "envoy/upstream/load_balancer.h"
-#include "source/common/upstream/load_balancer_impl.h"
+#include "source/extensions/load_balancing_policies/common/load_balancer_impl.h"
 #include "source/extensions/load_balancing_policies/memento/cpuls/MementoWithBinomialEngine.h"
 
 namespace Envoy {
