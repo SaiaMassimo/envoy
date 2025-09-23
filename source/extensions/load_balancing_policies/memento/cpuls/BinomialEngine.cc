@@ -82,7 +82,7 @@ int BinomialEngine::addBucket() {
     return newBucket;
 }
 
-int BinomialEngine::removeBucket(int b) {
+int BinomialEngine::removeBucket() {
     if (--m_size <= m_minorTreeFilter + 1) { // +1 perché il filtro è N-1
         this->m_minorTreeFilter >>= 1;
         this->m_enclosingTreeFilter >>= 1;
