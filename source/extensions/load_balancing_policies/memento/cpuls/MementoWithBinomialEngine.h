@@ -6,15 +6,6 @@
 #include <string>
 #include <memory>
 
-// NOTA: L'interfaccia HashFunction è estesa per includere un metodo con seed,
-// come richiesto dalla logica di getBucket.
-class HashFunction {
-public:
-    virtual ~HashFunction() = default;
-    virtual int64_t hash(const std::string& key) const = 0;
-    virtual int64_t hash(const std::string& key, int seed) const = 0;
-};
-
 class MementoWithBinomialEngine : public BucketBasedEngine {
 private:
     MementoWithBinomial m_memento;
@@ -44,7 +35,12 @@ public:
     /**
      * Rimuove un bucket.
      */
-    int removeBucket(int bucket) override;
+    int removeBucket() override;
+
+    /**
+     * Rimuove lo specifico bucket indicato.
+     */
+    int removeBucket(int bucket);
 
     /**
      * Restituisce la dimensione del set di lavoro.

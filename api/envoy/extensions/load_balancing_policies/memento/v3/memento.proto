@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package envoy.extensions.load_balancing_policies.memento.v3;
+
+option java_package = "io.envoyproxy.envoy.extensions.load_balancing_policies.memento.v3";
+option java_multiple_files = true;
+option java_outer_classname = "MementoProto";
+option go_package = "github.com/envoyproxy/go-control-plane/envoy/extensions/load_balancing_policies/memento/v3;memetov3";
+
+import "envoy/config/cluster/v3/cluster.proto";
+import "google/protobuf/wrappers.proto";
+
+// Minimal config for Memento LB
+message Memento {
+  // Optional table size similar to Maglev; not strictly required by Memento.
+  google.protobuf.UInt64Value table_size = 1;
+
+  // Reuse common consistent hashing config options.
+  envoy.config.cluster.v3.Cluster.CommonLbConfig.ConsistentHashingLbConfig consistent_hashing_lb_config = 2;
+}
+

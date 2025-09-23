@@ -72,3 +72,4 @@ lerna-debug.log*
 node_modules
 dist
 *.bak
+buildTestMemento.txt

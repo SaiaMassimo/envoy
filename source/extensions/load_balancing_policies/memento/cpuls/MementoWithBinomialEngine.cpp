@@ -1,6 +1,7 @@
 #include "MementoWithBinomialEngine.h"
 #include <cmath>    // Per std::abs
 #include <iostream> // Per std::cout
+#include <string>   // Per std::to_string
 
 MementoWithBinomialEngine::MementoWithBinomialEngine(int size, const HashFunction& hashFunction)
     : m_memento(),
@@ -25,7 +26,8 @@ int MementoWithBinomialEngine::getBucket(const std::string& key) {
          * del set di lavoro quando il bucket è stato rimosso e otteniamo un
          * nuovo bucket in [0, replacer-1].
          */
-        const int64_t h = std::abs(m_hashFunction.hash(key, b));
+        const std::string rehash_key = key + "#" + std::to_string(b);
+        const int64_t h = std::abs(m_hashFunction.hash(rehash_key));
         b = static_cast<int>(h % replacer);
 
         /*
@@ -56,6 +58,11 @@ int MementoWithBinomialEngine::addBucket() {
     return bucket;
 }
 
+int MementoWithBinomialEngine::removeBucket() {
+    const int bucket = size() - 1;
+    return removeBucket(bucket);
+}
+
 int MementoWithBinomialEngine::removeBucket(int bucket) {
     if (m_memento.isEmpty() && bucket == m_binomialEngine.size() - 1) {
     m_binomialEngine.removeBucket();
@@ -76,3 +83,5 @@ int MementoWithBinomialEngine::size() const {
 }
 
 int MementoWithBinomialEngine::bArraySize() const {
+    return m_binomialEngine.size();
+}

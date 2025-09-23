@@ -32,7 +32,7 @@ envoy_cc_library(
 envoy_cc_library(
     name = "memento_lb_lib",
     srcs = [
-        "memento_lb.cc",
+        "memento-lb.cc",
         "memento_table.cc",
     ],
     hdrs = [
@@ -51,12 +51,13 @@ envoy_cc_library(
 # Questo è il punto di ingresso che Envoy usa per trovare il tuo LB.
 envoy_cc_extension(
     name = "config",
-    srcs = ["memento_lb_factory.cc"],
-    # Non ci sono header specifici per la factory, quindi hdrs è vuoto
+    srcs = [
+        "config.cc",
+        "config.h",
+    ],
     deps = [
-        ":memento_lb_lib", # Dipende dalla libreria di integrazione
+        ":memento_lb_lib",
         "//source/extensions/load_balancing_policies/common:factory_base",
-        # Dipendenza dal file .proto generato per la configurazione
         "@envoy_api//envoy/extensions/load_balancing_policies/memento/v3:pkg_cc_proto",
     ],
 )

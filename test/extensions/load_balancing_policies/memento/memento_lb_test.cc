@@ -49,8 +49,8 @@ public:
       : stat_names_(stats_store_.symbolTable()), stats_(stat_names_, *stats_store_.rootScope()) {}
 
   void createLb() {
-    envoy::config::cluster::v3::Cluster::MementoLbConfig legacy;
-    Memento::MementoLbConfig typed_config(legacy);
+    const uint64_t table_size = 65537;
+    Memento::MementoLbConfig typed_config(table_size);
 
     lb_ = std::make_unique<Memento::MementoLoadBalancer>(priority_set_, stats_,
                                                          *stats_store_.rootScope(),

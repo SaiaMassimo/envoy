@@ -14,7 +14,7 @@ namespace Memento {
 // La configurazione specifica per Memento. Per ora, solo la dimensione della tabella.
 class MementoLbConfig {
 public:
-    MementoLbConfig(const envoy::config::cluster::v3::Cluster::MementoLbConfig& config);
+    explicit MementoLbConfig(uint64_t table_size);
     uint64_t tableSize() const { return table_size_; }
 
 private:
@@ -33,24 +33,13 @@ public:
                         const MementoLbConfig& config);
 
 private:
-    // Factory per creare un MementoTable per ogni thread.
-    class MementoLbFactory : public Upstream::LoadBalancerFactory {
-    public:
-        MementoLbFactory(const MementoLoadBalancer& parent, uint64_t table_size)
-            : parent_(parent), table_size_(table_size) {}
-
-        Upstream::LoadBalancerPtr create(Upstream::LoadBalancerParamsConstSharedPtr params) override;
-
-    private:
-        const MementoLoadBalancer& parent_;
-        const uint64_t table_size_;
-    };
-
-    // Implementazione di ThreadAwareLoadBalancerBase
-    Upstream::LoadBalancerFactorySharedPtr factory() override { return factory_; }
+    // ThreadAwareLoadBalancerBase
+    Upstream::ThreadAwareLoadBalancerBase::HashingLoadBalancerSharedPtr
+    createLoadBalancer(const Upstream::NormalizedHostWeightVector& normalized_host_weights,
+                       double /* min_normalized_weight */, double /* max_normalized_weight */) override;
 
     const MementoLbConfig& config_;
-    Upstream::LoadBalancerFactorySharedPtr factory_;
+    std::shared_ptr<MementoTable> table_;
 };
 
 } // namespace Memento
