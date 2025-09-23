@@ -21,7 +21,7 @@ public:
     virtual ~BucketBasedEngine() = default;
     virtual int getBucket(const std::string& key) = 0;
     virtual int addBucket() = 0;
-    virtual int removeBucket(int b) = 0;
+    virtual int removeBucket() = 0;
     virtual int size() const = 0;
 };
 
@@ -72,7 +72,7 @@ public:
     /**
      * Diminuisce la dimensione del cluster di uno.
      */
-    int removeBucket(int b) override;
+    int removeBucket() override;
 
     /**
      * Restituisce la dimensione del cluster.

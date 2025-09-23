@@ -58,7 +58,7 @@ int MementoWithBinomialEngine::addBucket() {
 
 int MementoWithBinomialEngine::removeBucket(int bucket) {
     if (m_memento.isEmpty() && bucket == m_binomialEngine.size() - 1) {
-        m_binomialEngine.removeBucket(bucket);
+    m_binomialEngine.removeBucket();
         m_lastRemoved = bucket;
         return bucket;
     }
