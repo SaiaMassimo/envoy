@@ -13,11 +13,16 @@ export ENVOY_SRCDIR="${ENVOY_SRCDIR:-$PWD}"
 CURRENT_SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=ci/build_setup.sh
-# Avoid unbound NO_BUILD_SETUP inside build_setup.sh under `set -u`
-if [[ -z "${NO_BUILD_SETUP+x}" ]]; then
-  export NO_BUILD_SETUP=""
-fi
+# Avoid unbound variables inside build_setup.sh under `set -u`
+if [[ -z "${NO_BUILD_SETUP+x}" ]]; then export NO_BUILD_SETUP=""; fi
+if [[ -z "${NUM_CPUS+x}" ]]; then export NUM_CPUS=""; fi
+if [[ -z "${BUILD_DIR+x}" ]]; then export BUILD_DIR=""; fi
+if [[ -z "${BAZEL_EXPUNGE+x}" ]]; then export BAZEL_EXPUNGE=""; fi
+
+# Temporarily disable nounset while sourcing build_setup.sh (it expects some vars to be unset)
+set +u
 . "${CURRENT_SCRIPT_DIR}"/build_setup.sh
+set -u
 
 # Determine build arch directory (mirrors do_ci.sh logic)
 if [[ "${ENVOY_BUILD_ARCH}" == "x86_64" ]]; then
