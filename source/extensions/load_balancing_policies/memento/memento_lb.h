@@ -2,7 +2,7 @@
 #pragma once
 
 #include "envoy/upstream/load_balancer.h"
-#include "source/common/upstream/thread_aware_lb_impl.h"
+#include "source/extensions/load_balancing_policies/common/thread_aware_lb_impl.h"
 #include "source/extensions/load_balancing_policies/memento/memento_table.h"
 #include "envoy/config/cluster/v3/cluster.pb.h"
 
