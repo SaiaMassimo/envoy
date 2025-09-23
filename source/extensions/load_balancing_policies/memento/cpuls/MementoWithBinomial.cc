@@ -131,10 +131,12 @@ MementoWithBinomial::Entry* MementoWithBinomial::remove(int bucket) {
 }
 
 void MementoWithBinomial::resizeTable(int newTableSize) {
-    if (newTableSize < m_table.size() && m_table.size() <= MIN_TABLE_SIZE) {
+    if (static_cast<size_t>(newTableSize) < m_table.size() &&
+        m_table.size() <= static_cast<size_t>(MIN_TABLE_SIZE)) {
         return;
     }
-    if (newTableSize > m_table.size() && m_table.size() >= MAX_TABLE_SIZE) {
+    if (static_cast<size_t>(newTableSize) > m_table.size() &&
+        m_table.size() >= static_cast<size_t>(MAX_TABLE_SIZE)) {
         return;
     }
 
