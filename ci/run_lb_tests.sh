@@ -13,6 +13,10 @@ export ENVOY_SRCDIR="${ENVOY_SRCDIR:-$PWD}"
 CURRENT_SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=ci/build_setup.sh
+# Avoid unbound NO_BUILD_SETUP inside build_setup.sh under `set -u`
+if [[ -z "${NO_BUILD_SETUP+x}" ]]; then
+  export NO_BUILD_SETUP=""
+fi
 . "${CURRENT_SCRIPT_DIR}"/build_setup.sh
 
 # Determine build arch directory (mirrors do_ci.sh logic)
@@ -76,7 +80,12 @@ declare -A POLICY_MAP=(
 )
 
 if [[ "$arg" == //* ]]; then
-  TEST_TARGET="$arg"
+  # Allow passing a package path; if no explicit target and not a recursive pattern, default to /...
+  if [[ "$arg" != *":"* && "$arg" != */... ]]; then
+    TEST_TARGET="${arg}/..."
+  else
+    TEST_TARGET="$arg"
+  fi
 else
   if [[ -n "${POLICY_MAP[$arg]:-}" ]]; then
     TEST_TARGET="${POLICY_MAP[$arg]}"
