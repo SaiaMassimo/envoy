@@ -41,7 +41,7 @@ envoy_cc_library(
     ],
     deps = [
         ":memento_core_lib",  # Dipende dalla nostra logica core
-        "//source/common/upstream:load_balancer_lib",
+        "//source/extensions/load_balancing_policies/common:load_balancer_lib",
         "//source/extensions/load_balancing_policies/common:thread_aware_lb_lib",
         "@envoy_api//envoy/config/cluster/v3:pkg_cc_proto",
     ],

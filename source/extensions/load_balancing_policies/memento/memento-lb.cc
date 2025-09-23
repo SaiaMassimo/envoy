@@ -1,6 +1,6 @@
 // envoy/source/extensions/load_balancing_policies/memento/memento_lb.cc
 #include "source/extensions/load_balancing_policies/memento/memento_lb.h"
-#include "source/common/upstream/load_balancer_impl.h"
+#include "source/extensions/load_balancing_policies/common/load_balancer_impl.h"
 
 namespace Envoy {
 namespace Extensions {
