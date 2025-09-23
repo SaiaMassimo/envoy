@@ -24,6 +24,9 @@ set +u
 . "${CURRENT_SCRIPT_DIR}"/build_setup.sh
 set -u
 
+# Prevent build_setup.sh cleanup from removing bazel-* symlinks so logs remain available after exit
+trap - EXIT
+
 # Determine build arch directory (mirrors do_ci.sh logic)
 if [[ "${ENVOY_BUILD_ARCH}" == "x86_64" ]]; then
   BUILD_ARCH_DIR="/linux/amd64"
