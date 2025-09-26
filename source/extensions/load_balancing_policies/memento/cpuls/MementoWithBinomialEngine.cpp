@@ -26,8 +26,8 @@ int MementoWithBinomialEngine::getBucket(const std::string& key) {
          * del set di lavoro quando il bucket è stato rimosso e otteniamo un
          * nuovo bucket in [0, replacer-1].
          */
-        const std::string rehash_key = key + "#" + std::to_string(b);
-        const int64_t h = std::abs(m_hashFunction.hash(rehash_key));
+        // Calcola un nuovo hash seedato con il bucket precedente `b` e rimappa in [0, replacer-1].
+        const int64_t h = std::abs(m_hashFunction.hash(key, static_cast<uint64_t>(b)));
         b = static_cast<int>(h % replacer);
 
         /*
@@ -65,11 +65,10 @@ int MementoWithBinomialEngine::removeBucket() {
 
 int MementoWithBinomialEngine::removeBucket(int bucket) {
     if (m_memento.isEmpty() && bucket == m_binomialEngine.size() - 1) {
-    m_binomialEngine.removeBucket();
+        m_binomialEngine.removeBucket();
         m_lastRemoved = bucket;
         return bucket;
     }
-
     this->m_lastRemoved = m_memento.remember(
         bucket,
         size() - 1,

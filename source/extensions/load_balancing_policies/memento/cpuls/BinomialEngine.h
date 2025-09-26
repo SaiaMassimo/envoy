@@ -10,7 +10,7 @@
 class HashFunction {
 public:
     virtual ~HashFunction() = default;
-    virtual int64_t hash(const std::string& key) const = 0;
+    virtual int64_t hash(const std::string& key, uint64_t seed = 0) const = 0;
 };
 
 /**

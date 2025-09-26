@@ -27,7 +27,7 @@ private:
   // Adattatore per usare l'hash di Envoy con l'interfaccia HashFunction del core cpuls.
   class EnvoyHashFunction : public ::HashFunction {
   public:
-    int64_t hash(const std::string& key) const override;
+    int64_t hash(const std::string& key, uint64_t seed = 0) const override;
   };
 
   // Vettore che mappa gli indici di Memento agli host di Envoy.

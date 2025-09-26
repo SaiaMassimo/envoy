@@ -1,7 +1,6 @@
 #include "envoy/config/core/v3/extension.pb.h"
 #include "envoy/extensions/load_balancing_policies/memento/v3/memento.pb.h"
 
-#include "source/extensions/load_balancing_policies/memento/memento_lb_factory.cc"
 
 #include "test/mocks/server/factory_context.h"
 #include "test/mocks/upstream/cluster_info.h"
@@ -22,12 +21,12 @@ TEST(MementoConfigTest, Validate) {
   NiceMock<Upstream::MockPrioritySet> thread_local_priority_set;
 
   envoy::config::core::v3::TypedExtensionConfig config;
-  config.set_name("envoy.load_balancing_policies.memento_lb");
-  envoy::extensions::load_balancing_policies::memento::v3::MementoLbConfig config_msg;
+  config.set_name("envoy.load_balancing_policies.memento");
+  envoy::extensions::load_balancing_policies::memento::v3::Memento config_msg;
   config.mutable_typed_config()->PackFrom(config_msg);
 
   auto& factory = Config::Utility::getAndCheckFactory<Upstream::TypedLoadBalancerFactory>(config);
-  EXPECT_EQ("envoy.load_balancing_policies.memento_lb", factory.name());
+  EXPECT_EQ("envoy.load_balancing_policies.memento", factory.name());
 
   auto lb_config = factory.loadConfig(context, *factory.createEmptyConfigProto()).value();
   auto thread_aware_lb =

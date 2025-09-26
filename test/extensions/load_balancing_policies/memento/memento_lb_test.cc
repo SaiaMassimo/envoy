@@ -50,9 +50,9 @@ public:
 
   void createLb() {
     const uint64_t table_size = 65537;
-    Memento::MementoLbConfig typed_config(table_size);
+    Envoy::Extensions::LoadBalancingPolicies::Memento::MementoLbConfig typed_config(table_size);
 
-    lb_ = std::make_unique<Memento::MementoLoadBalancer>(priority_set_, stats_,
+    lb_ = std::make_unique<Envoy::Extensions::LoadBalancingPolicies::Memento::MementoLoadBalancer>(priority_set_, stats_,
                                                          *stats_store_.rootScope(),
                                                          context_.runtime_loader_,
                                                          context_.api_.random_, 50, typed_config);
@@ -74,7 +74,7 @@ public:
   ClusterLbStats stats_;
   NiceMock<Server::Configuration::MockServerFactoryContext> context_;
 
-  std::unique_ptr<Memento::MementoLoadBalancer> lb_;
+  std::unique_ptr<Envoy::Extensions::LoadBalancingPolicies::Memento::MementoLoadBalancer> lb_;
 };
 
 TEST_F(MementoLoadBalancerTest, NoHost) {
@@ -133,6 +133,67 @@ TEST_F(MementoLoadBalancerTest, BasicWithRetryHostPredicate) {
     TestLoadBalancerContext context(10, 2, [](const Host&) { return true; });
     EXPECT_NE(nullptr, lb->chooseHost(&context).host);
   }
+}
+
+TEST_F(MementoLoadBalancerTest, DeltaUpdatesInPlace) {
+  // 1) Initial hosts
+  host_set_.hosts_ = {
+      makeTestHost(info_, "tcp://127.0.0.1:90"), makeTestHost(info_, "tcp://127.0.0.1:91"),
+      makeTestHost(info_, "tcp://127.0.0.1:92"), makeTestHost(info_, "tcp://127.0.0.1:93")};
+  host_set_.healthy_hosts_ = host_set_.hosts_;
+  host_set_.runCallbacks({}, {});
+  init();
+
+  LoadBalancerPtr lb = lb_->factory()->create(lb_params_);
+  absl::node_hash_map<std::string, uint64_t> baseline_hits;
+  for (uint64_t i = 0; i < 2000; ++i) {
+    TestLoadBalancerContext context(i);
+    auto chosen = lb->chooseHost(&context).host;
+    ASSERT_NE(nullptr, chosen);
+    baseline_hits[chosen->address()->asString()] += 1;
+  }
+
+  // 2) Remove one host and apply delta without recreating the LB instance
+  Upstream::HostVector removed{host_set_.hosts_[1]};
+  host_set_.hosts_.erase(host_set_.hosts_.begin() + 1);
+  host_set_.healthy_hosts_ = host_set_.hosts_;
+  host_set_.runCallbacks({}, removed);
+
+  // The load balancer should automatically update via the callback mechanism
+  // Get a new thread-aware load balancer instance after the update
+  LoadBalancerPtr lb_after_remove = lb_->factory()->create(lb_params_);
+  absl::node_hash_map<std::string, uint64_t> after_remove_hits;
+  for (uint64_t i = 0; i < 2000; ++i) {
+    TestLoadBalancerContext context(i);
+    auto chosen = lb_after_remove->chooseHost(&context).host;
+    ASSERT_NE(nullptr, chosen);
+    after_remove_hits[chosen->address()->asString()] += 1;
+  }
+
+  // Ensure removed host is not selected anymore
+  EXPECT_EQ(0, after_remove_hits[removed[0]->address()->asString()]);
+
+  // 3) Add a new host and apply delta
+  auto new_host = makeTestHost(info_, "tcp://127.0.0.1:94");
+  Upstream::HostVector added{new_host};
+  host_set_.hosts_.push_back(new_host);
+  host_set_.healthy_hosts_ = host_set_.hosts_;
+  host_set_.runCallbacks(added, {});
+
+  // The load balancer should automatically update via the callback mechanism
+  // Get a new thread-aware load balancer instance after the update
+  LoadBalancerPtr lb_after_add = lb_->factory()->create(lb_params_);
+  bool saw_new_host = false;
+  for (uint64_t i = 0; i < 5000; ++i) {
+    TestLoadBalancerContext context(i);
+    auto chosen = lb_after_add->chooseHost(&context).host;
+    ASSERT_NE(nullptr, chosen);
+    if (chosen->address()->asString() == new_host->address()->asString()) {
+      saw_new_host = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(saw_new_host);
 }
 
 } // namespace

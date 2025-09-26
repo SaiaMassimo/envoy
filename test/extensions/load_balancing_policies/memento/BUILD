@@ -16,7 +16,7 @@ envoy_package()
 envoy_extension_cc_test(
     name = "memento_lb_test",
     srcs = ["memento_lb_test.cc"],
-    extension_names = ["envoy.load_balancing_policies.memento_lb"],
+    extension_names = ["envoy.load_balancing_policies.memento"],
     rbe_pool = "6gig",
     deps = [
         "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
@@ -37,7 +37,7 @@ envoy_extension_cc_test(
 envoy_extension_cc_test(
     name = "config_test",
     srcs = ["config_test.cc"],
-    extension_names = ["envoy.load_balancing_policies.memento_lb"],
+    extension_names = ["envoy.load_balancing_policies.memento"],
     rbe_pool = "6gig",
     deps = [
         "//source/extensions/load_balancing_policies/memento:config",
@@ -53,7 +53,7 @@ envoy_extension_cc_test(
     name = "integration_test",
     size = "large",
     srcs = ["integration_test.cc"],
-    extension_names = ["envoy.load_balancing_policies.memento_lb"],
+    extension_names = ["envoy.load_balancing_policies.memento"],
     rbe_pool = "6gig",
     deps = [
         "//source/common/protobuf",
@@ -78,6 +78,22 @@ envoy_benchmark_test(
     name = "memento_lb_benchmark_test",
     timeout = "long",
     benchmark_binary = "memento_lb_benchmark",
+)
+
+envoy_cc_benchmark_binary(
+    name = "memento_lb_inplace_benchmark",
+    srcs = ["memento_lb_inplace_benchmark.cc"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//test/extensions/load_balancing_policies/common:benchmark_base_tester_lib",
+    ],
+)
+
+envoy_benchmark_test(
+    name = "memento_lb_inplace_benchmark_test",
+    timeout = "long",
+    benchmark_binary = "memento_lb_inplace_benchmark",
 )
 
 
