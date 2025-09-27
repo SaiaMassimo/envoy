@@ -47,6 +47,25 @@ envoy_cc_library(
     ],
 )
 
+# 2.1. Libreria per il LB con supporto ai pesi (nodi virtuali)
+envoy_cc_library(
+    name = "weighted_memento_lb_lib",
+    srcs = [
+        "weighted_memento_lb.cc",
+        "weighted_memento_table.cc",
+    ],
+    hdrs = [
+        "weighted_memento_lb.h",
+        "weighted_memento_table.h",
+    ],
+    deps = [
+        ":memento_core_lib",  # Dipende dalla nostra logica core
+        "//source/extensions/load_balancing_policies/common:load_balancer_lib",
+        "//source/extensions/load_balancing_policies/common:thread_aware_lb_lib",
+        "@envoy_api//envoy/config/cluster/v3:pkg_cc_proto",
+    ],
+)
+
 # 3. Configurazione dell'estensione che registra la factory
 # Questo è il punto di ingresso che Envoy usa per trovare il tuo LB.
 envoy_cc_extension(

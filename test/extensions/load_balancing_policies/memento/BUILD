@@ -96,4 +96,14 @@ envoy_benchmark_test(
     benchmark_binary = "memento_lb_inplace_benchmark",
 )
 
+envoy_extension_cc_test(
+    name = "weighted_memento_simple_test",
+    srcs = ["weighted_memento_simple_test.cc"],
+    extension_names = ["envoy.load_balancing_policies.memento"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:weighted_memento_lb_lib",
+    ],
+)
+
 

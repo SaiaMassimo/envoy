@@ -18,7 +18,10 @@ int MementoWithBinomialEngine::getBucket(const std::string& key) {
      * Se il bucket è stato rimosso, il sostituto è >= 0, altrimenti è -1.
      */
     int replacer = m_memento.replacer(b);
-    while (replacer >= 0) {
+    int iterations = 0;
+    const int MAX_ITERATIONS = 1000; // Prevenzione loop infinito
+    while (replacer >= 0 && iterations < MAX_ITERATIONS) {
+        ++iterations;
         /*
          * Se il bucket è stato rimosso, dobbiamo fare un re-hash e trovare
          * un nuovo bucket negli slot rimanenti. Per conoscere gli slot
@@ -44,6 +47,12 @@ int MementoWithBinomialEngine::getBucket(const std::string& key) {
         /* Infine, aggiorniamo la voce per il ciclo esterno. */
         replacer = r;
     }
+    
+    // Se abbiamo raggiunto il limite di iterazioni, logga un warning
+    if (iterations >= MAX_ITERATIONS) {
+        std::cout << "WARNING: getBucket reached MAX_ITERATIONS (" << MAX_ITERATIONS << "), breaking loop" << std::endl;
+    }
+    
     return b;
 }
 

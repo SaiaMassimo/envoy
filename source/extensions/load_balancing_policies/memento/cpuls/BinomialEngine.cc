@@ -1,4 +1,5 @@
 #include "BinomialEngine.h"
+#include <iostream>
 
 // Funzione helper per trovare il bit più significativo (simile a Integer.highestOneBit in Java)
 int BinomialEngine::highestOneBit(int i) {
