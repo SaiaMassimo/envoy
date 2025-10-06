@@ -30,10 +30,14 @@ int64_t BinomialEngine::rehash(int64_t value, int seed) const {
 }
 
 int BinomialEngine::relocateWithinLevel(int bucket, int64_t hash) const {
+    // Algorithm 2: Relocate within level from the paper
+    // Line 2: if b < 2 then
     if (bucket < 2) {
+        // Line 3: return b
         return bucket;
     }
-
+    
+    // Seguendo l'implementazione Java funzionante
     const int levelBaseIndex = highestOneBit(bucket);
     const int levelFilter = levelBaseIndex - 1;
 
@@ -42,6 +46,7 @@ int BinomialEngine::relocateWithinLevel(int bucket, int64_t hash) const {
 
     return levelBaseIndex + levelIndex;
 }
+
 
 int BinomialEngine::getBucket(const std::string& key) {
     if (m_size < 2) {
@@ -76,10 +81,18 @@ int BinomialEngine::getBucket(const std::string& key) {
 
 int BinomialEngine::addBucket() {
     const int newBucket = m_size;
-    if (++m_size > m_enclosingTreeFilter + 1) { // +1 perché il filtro è N-1
-        this->m_enclosingTreeFilter = (this->m_enclosingTreeFilter << 1) | 1;
-        this->m_minorTreeFilter = (this->m_minorTreeFilter << 1) | 1;
+    if (++m_size == 1){
+        this->m_enclosingTreeFilter = 1;
+        this->m_minorTreeFilter = 0;
+    } else {
+        int hob = highestOneBit(m_size);
+        if (m_size > hob) {
+            hob <<= 1;
+        }
+        this->m_enclosingTreeFilter = hob - 1;
+        this->m_minorTreeFilter = this->m_enclosingTreeFilter >> 1;
     }
+    
     return newBucket;
 }
 
@@ -97,4 +110,8 @@ int BinomialEngine::size() const {
 
 int64_t BinomialEngine::enclosingTreeFilter() const {
     return m_enclosingTreeFilter;
+}
+
+int64_t BinomialEngine::minorTreeFilter() const {
+    return m_minorTreeFilter;
 }

@@ -102,7 +102,32 @@ envoy_extension_cc_test(
     extension_names = ["envoy.load_balancing_policies.memento"],
     rbe_pool = "6gig",
     deps = [
-        "//source/extensions/load_balancing_policies/memento:weighted_memento_lb_lib",
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+    ],
+)
+
+envoy_extension_cc_test(
+    name = "unified_memento_test",
+    srcs = ["unified_memento_test.cc"],
+    extension_names = ["envoy.load_balancing_policies.memento"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//test/mocks/upstream:cluster_info_mocks",
+        "//test/mocks/upstream:host_mocks",
+        "//test/test_common:test_runtime_lib",
+    ],
+)
+
+envoy_extension_cc_test(
+    name = "binomial_engine_test",
+    srcs = ["binomial_engine_test.cc"],
+    extension_names = ["envoy.load_balancing_policies.memento"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_core_lib",
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//test/test_common:simulated_time_system_lib",
     ],
 )
 

@@ -6,7 +6,6 @@
 #include "source/common/common/base64.h"
 #include "source/common/http/utility.h"
 #include "source/common/protobuf/protobuf.h"
-#include "source/extensions/load_balancing_policies/memento/memento_lb_factory.cc"
 
 #include "test/integration/http_integration.h"
 
@@ -73,7 +72,7 @@ public:
           - typed_extension_config:
               name: envoy.load_balancing_policies.memento_lb
               typed_config:
-                "@type": type.googleapis.com/envoy.extensions.load_balancing_policies.memento.v3.MementoLbConfig
+                "@type": type.googleapis.com/envoy.extensions.load_balancing_policies.memento.v3.Memento
           )EOF";
 
       TestUtility::loadFromYaml(policy_yaml, *policy);
