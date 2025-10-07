@@ -64,7 +64,7 @@ int MementoWithBinomialEngine::addBucket() {
     this->m_lastRemoved = m_memento.restore(bucket);
 
     if (bArraySize() <= bucket) {
-        std::cout << "i add a new buket to binomial " << std::endl;
+        //std::cout << "i add a new buket to binomial " << std::endl;
         m_binomialEngine.addBucket();
     }
     return bucket;

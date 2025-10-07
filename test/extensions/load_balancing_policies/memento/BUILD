@@ -131,4 +131,16 @@ envoy_extension_cc_test(
     ],
 )
 
+envoy_extension_cc_test(
+    name = "memento_incremental_weighted_test",
+    srcs = ["memento_incremental_weighted_test.cc"],
+    extension_names = ["envoy.load_balancing_policies.memento"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//test/mocks/upstream:cluster_info_mocks",
+        "//test/mocks/upstream:host_mocks",
+    ],
+)
+
 

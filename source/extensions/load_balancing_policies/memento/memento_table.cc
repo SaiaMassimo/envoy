@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <cmath>
-#include <iostream>
 
 namespace Envoy {
 namespace Extensions {
@@ -25,7 +24,8 @@ bool MementoTable::areWeightsUniform(const Upstream::NormalizedHostWeightVector&
   const double tolerance = 1e-3;  // Increased tolerance for normalized weights
   
   for (const auto& host_weight_pair : normalized_host_weights) {
-    if (std::abs(host_weight_pair.second - first_weight) > tolerance) {
+    double weight = host_weight_pair.second;
+    if (std::abs(weight - first_weight) > tolerance) {
       return false;  // Found different weight
     }
   }
@@ -63,7 +63,8 @@ void MementoTable::initializeUnweighted(const Upstream::NormalizedHostWeightVect
   host_table_.clear();
   host_table_.reserve(num_hosts);
   for (const auto& host_weight_pair : normalized_host_weights) {
-    host_table_.push_back(host_weight_pair.first);
+    Upstream::HostConstSharedPtr host = host_weight_pair.first;
+    host_table_.push_back(host);
   }
   
 }
@@ -91,8 +92,9 @@ void MementoTable::initializeWeighted(const Upstream::NormalizedHostWeightVector
   
   size_t virtual_node_index = 0;
   for (const auto& host_weight_pair : normalized_host_weights) {
-    const auto& host = host_weight_pair.first;
-    uint32_t virtual_nodes = normalizedWeightToInteger(host_weight_pair.second);
+    Upstream::HostConstSharedPtr host = host_weight_pair.first;
+    double weight = host_weight_pair.second;
+    uint32_t virtual_nodes = normalizedWeightToInteger(weight);
     
     // Mappa range di nodi virtuali per questo host
     size_t start_index = virtual_node_index;
@@ -204,19 +206,135 @@ void MementoTable::updateUnweighted(const Upstream::NormalizedHostWeightVector& 
 }
 
 void MementoTable::updateWeighted(const Upstream::NormalizedHostWeightVector& normalized_host_weights) {
-  // Implementazione semplificata per modalità weighted: reinizializza
-  // TODO: implementare aggiornamenti incrementali più sofisticati
+  // Implementazione incrementale per modalità weighted
   
-  // Reset e reinizializza
-  virtual_to_physical_.clear();
-  physical_to_virtual_range_.clear();
-  current_weights_.clear();
+  // 1. Calcola nuovi pesi interi
+  std::unordered_map<const Upstream::Host*, uint32_t> new_weights;
+  for (const auto& hw : normalized_host_weights) {
+    const Upstream::Host* host = hw.first.get();
+    double weight = hw.second;
+    new_weights[host] = normalizedWeightToInteger(weight);
+  }
   
-  // Reset engine
-  memento_engine_ = std::make_unique<MementoWithBinomialEngine>(1, hash_function_);
+  // 2. Identifica cambiamenti e aggiorna
+  for (const auto& pair : new_weights) {
+    const Upstream::Host* host = pair.first;
+    uint32_t new_weight = pair.second;
+    auto it = current_weights_.find(host);
+    if (it == current_weights_.end()) {
+      // Nuovo host: aggiungi nodi virtuali
+      addVirtualNodes(host, new_weight);
+    } else if (it->second != new_weight) {
+      // Peso cambiato: aggiorna nodi virtuali
+      updateVirtualNodes(host, it->second, new_weight);
+    }
+  }
   
-  // Reinizializza con nuovi pesi
-  initializeWeighted(normalized_host_weights);
+  // 3. Rimuovi host non più presenti
+  for (auto it = current_weights_.begin(); it != current_weights_.end();) {
+    if (new_weights.find(it->first) == new_weights.end()) {
+      removeVirtualNodes(it->first);  // removeVirtualNodes() rimuove già da current_weights_
+      // Non dobbiamo fare erase() qui perché removeVirtualNodes() lo fa già
+      it = current_weights_.begin();  // Ricomincia l'iterazione
+    } else {
+      ++it;
+    }
+  }
+  
+  // 4. Ricostruisci l'engine con la dimensione finale
+  size_t final_size = virtual_to_physical_.size();
+  memento_engine_ = std::make_unique<MementoWithBinomialEngine>(final_size, hash_function_);
+}
+
+void MementoTable::addVirtualNodes(const Upstream::Host* host, uint32_t weight) {
+  // Aggiungi nodi virtuali alla fine del vettore
+  size_t start_index = virtual_to_physical_.size();
+  
+  for (uint32_t i = 0; i < weight; ++i) {
+    virtual_to_physical_.push_back(Upstream::HostConstSharedPtr(host, [](const Upstream::Host*){}));
+    memento_engine_->addBucket();
+  }
+  
+  // Salva il range per questo host
+  physical_to_virtual_range_[host] = {start_index, start_index + weight};
+  current_weights_[host] = weight;
+}
+
+void MementoTable::removeVirtualNodes(const Upstream::Host* host) {
+  auto it = physical_to_virtual_range_.find(host);
+  if (it == physical_to_virtual_range_.end()) {
+    return; // Host non trovato
+  }
+  
+  auto range = it->second;
+  size_t start = range.first;
+  size_t end = range.second;
+  size_t num_nodes = end - start;
+  
+  // Rimuovi dal vettore mantenendo l'ordine
+  virtual_to_physical_.erase(virtual_to_physical_.begin() + static_cast<long>(start), 
+                            virtual_to_physical_.begin() + static_cast<long>(end));
+  
+  // Aggiorna i range degli altri host
+  for (auto& pair : physical_to_virtual_range_) {
+    const Upstream::Host* other_host = pair.first;
+    auto& range = pair.second;
+    if (other_host != host && range.first > start) {
+      range.first -= num_nodes;
+      range.second -= num_nodes;
+    }
+  }
+  
+  // Rimuovi l'host dalla mappa
+  physical_to_virtual_range_.erase(it);
+  current_weights_.erase(host);
+  
+  // NON ricostruiamo l'engine qui, lo farà updateWeighted() alla fine
+}
+
+void MementoTable::updateVirtualNodes(const Upstream::Host* host, uint32_t old_weight, uint32_t new_weight) {
+  if (old_weight == new_weight) {
+    return; // Nessun cambiamento
+  }
+  
+  if (new_weight > old_weight) {
+    // Aggiungi nodi virtuali
+    uint32_t nodes_to_add = new_weight - old_weight;
+    
+    for (uint32_t i = 0; i < nodes_to_add; ++i) {
+      virtual_to_physical_.push_back(Upstream::HostConstSharedPtr(host, [](const Upstream::Host*){}));
+      memento_engine_->addBucket();
+    }
+    
+    // Aggiorna il range
+    auto& range = physical_to_virtual_range_[host];
+    range.second = range.first + new_weight;
+  } else {
+    // Rimuovi nodi virtuali
+    uint32_t nodes_to_remove = old_weight - new_weight;
+    auto& range = physical_to_virtual_range_[host];
+    
+    // Rimuovi dal vettore
+    virtual_to_physical_.erase(virtual_to_physical_.begin() + static_cast<long>(range.second - nodes_to_remove),
+                              virtual_to_physical_.begin() + static_cast<long>(range.second));
+    
+    // Aggiorna il range
+    range.second -= nodes_to_remove;
+    
+    // Aggiorna i range degli altri host
+    for (auto& other_pair : physical_to_virtual_range_) {
+      const Upstream::Host* other_host = other_pair.first;
+      auto& other_range = other_pair.second;
+      if (other_host != host && other_range.first > range.second) {
+        other_range.first -= nodes_to_remove;
+        other_range.second -= nodes_to_remove;
+      }
+    }
+    
+    // NON ricostruiamo l'engine qui, lo farà updateWeighted() alla fine
+  }
+  
+  current_weights_[host] = new_weight;
 }
 
 Upstream::HostSelectionResponse MementoTable::chooseHost(uint64_t hash, uint32_t attempt) const {

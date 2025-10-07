@@ -61,6 +61,11 @@ private:
   
   // Aggiornamenti per modalità weighted
   void updateWeighted(const Upstream::NormalizedHostWeightVector& normalized_host_weights);
+  
+  // Helper methods per aggiornamenti incrementali weighted
+  void addVirtualNodes(const Upstream::Host* host, uint32_t weight);
+  void removeVirtualNodes(const Upstream::Host* host);
+  void updateVirtualNodes(const Upstream::Host* host, uint32_t old_weight, uint32_t new_weight);
 
   // === State ===
   
