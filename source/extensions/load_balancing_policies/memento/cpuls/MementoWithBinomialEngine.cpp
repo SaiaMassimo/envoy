@@ -12,14 +12,13 @@ MementoWithBinomialEngine::MementoWithBinomialEngine(int size, const HashFunctio
 
 int MementoWithBinomialEngine::getBucket(const std::string& key) {
     int b = m_binomialEngine.getBucket(key);
-    std::cout << "DEBUG ENGINE: key=" << key << " initial_b=" << b << " engine_size=" << size() << " bArraySize=" << bArraySize() << std::endl;
+
 
     /*
      * Controlliamo se il bucket è stato rimosso. Se non lo è, abbiamo finito.
      * Se il bucket è stato rimosso, il sostituto è >= 0, altrimenti è -1.
      */
     int replacer = m_memento.replacer(b);
-    std::cout << "DEBUG ENGINE: replacer=" << replacer << std::endl;
     int iterations = 0;
     const int MAX_ITERATIONS = 1000; // Prevenzione loop infinito
     while (replacer >= 0 && iterations < MAX_ITERATIONS) {
@@ -55,7 +54,6 @@ int MementoWithBinomialEngine::getBucket(const std::string& key) {
         std::cout << "WARNING: getBucket reached MAX_ITERATIONS (" << MAX_ITERATIONS << "), breaking loop" << std::endl;
     }
     
-    std::cout << "DEBUG ENGINE: final_b=" << b << " iterations=" << iterations << std::endl;
     return b;
 }
 

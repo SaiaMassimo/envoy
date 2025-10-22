@@ -143,4 +143,70 @@ envoy_extension_cc_test(
     ],
 )
 
+envoy_cc_benchmark_binary(
+    name = "memento_vs_maglev_benchmark",
+    srcs = ["memento_vs_maglev_benchmark.cc"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//source/extensions/load_balancing_policies/maglev:maglev_lb_lib",
+        "//test/extensions/load_balancing_policies/common:benchmark_base_tester_lib",
+    ],
+)
+
+envoy_benchmark_test(
+    name = "memento_vs_maglev_benchmark_test",
+    timeout = "long",
+    benchmark_binary = "memento_vs_maglev_benchmark",
+)
+
+envoy_cc_benchmark_binary(
+    name = "memento_incremental_benchmark",
+    srcs = ["memento_incremental_benchmark.cc"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//test/extensions/load_balancing_policies/common:benchmark_base_tester_lib",
+    ],
+)
+
+envoy_benchmark_test(
+    name = "memento_incremental_benchmark_test",
+    timeout = "long",
+    benchmark_binary = "memento_incremental_benchmark",
+)
+
+envoy_cc_benchmark_binary(
+    name = "memento_vs_maglev_benchmark_simple",
+    srcs = ["memento_vs_maglev_benchmark_simple.cc"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//source/extensions/load_balancing_policies/maglev:maglev_lb_lib",
+        "//test/extensions/load_balancing_policies/common:benchmark_base_tester_lib",
+    ],
+)
+
+envoy_benchmark_test(
+    name = "memento_vs_maglev_benchmark_simple_test",
+    timeout = "long",
+    benchmark_binary = "memento_vs_maglev_benchmark_simple",
+)
+
+envoy_cc_benchmark_binary(
+    name = "memento_incremental_benchmark_simple",
+    srcs = ["memento_incremental_benchmark_simple.cc"],
+    rbe_pool = "6gig",
+    deps = [
+        "//source/extensions/load_balancing_policies/memento:memento_lb_lib",
+        "//test/extensions/load_balancing_policies/common:benchmark_base_tester_lib",
+    ],
+)
+
+envoy_benchmark_test(
+    name = "memento_incremental_benchmark_simple_test",
+    timeout = "long",
+    benchmark_binary = "memento_incremental_benchmark_simple",
+)
+
 

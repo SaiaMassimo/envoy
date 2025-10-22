@@ -262,6 +262,40 @@ TEST_F(MementoIncrementalWeightedTest, EmptyHostList) {
   }
 }
 
+TEST_F(MementoIncrementalWeightedTest, TemporaryUniformWeightsDuringUpdate) {
+  // Scenario: 3 host con pesi diversi, rimuoviamo uno e aggiorniamo gli altri
+  // Durante l'aggiornamento incrementale, temporaneamente abbiamo solo 2 host con pesi uniformi
+  
+  Upstream::NormalizedHostWeightVector initial_weights;
+  initial_weights.push_back({host1_, 0.2});   // 200 virtual nodes
+  initial_weights.push_back({host2_, 0.2});   // 200 virtual nodes  
+  initial_weights.push_back({host3_, 0.6});   // 600 virtual nodes
+  
+  MementoTable table(initial_weights, 65537);
+  
+  auto initial_stats = table.getStats();
+  EXPECT_TRUE(initial_stats.is_weighted_mode); // Dovrebbe essere weighted
+  EXPECT_EQ(initial_stats.total_physical_hosts, 3);
+  EXPECT_EQ(initial_stats.total_virtual_nodes, 1000);
+  
+  // Aggiornamento: rimuovi host3 e aggiorna host1 e host2 a 0.4
+  Upstream::NormalizedHostWeightVector updated_weights;
+  updated_weights.push_back({host1_, 0.4});   // 400 virtual nodes
+  updated_weights.push_back({host2_, 0.4});
+  updated_weights.push_back({host3_, 0.2});   // 400 virtual nodes
+  // host3 rimosso
+  
+  table.update(updated_weights);
+  
+  auto final_stats = table.getStats();
+  EXPECT_TRUE(final_stats.is_weighted_mode); // Dovrebbe rimanere weighted (pesi uniformi ma non 1:1)
+  EXPECT_EQ(final_stats.total_physical_hosts, 3);
+  EXPECT_EQ(final_stats.total_virtual_nodes, 1000); // 400 + 400
+  
+  // Verifica che la tabella funzioni ancora
+  verifyTableFunctionality(table);
+}
+
 } // namespace Memento
 } // namespace LoadBalancingPolicies
 } // namespace Extensions
